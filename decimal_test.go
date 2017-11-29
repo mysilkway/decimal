@@ -2108,3 +2108,41 @@ func TestAvg(t *testing.T) {
 		t.Errorf("Failed to calculate average, expected %s got %s", NewFromFloat(4.5).String(), avg.String())
 	}
 }
+
+func TestDecimal_RoundUp(t *testing.T) {
+	tests := []struct {
+		d      string
+		places int32
+		result string
+	}{
+		{"0.0001", 2, "0.01"},
+		{"0.0001", 1, "0.1"},
+		{"0.0001", 0, "1"},
+		{"0.0001", -1, "10"},
+
+		{"4.2312486", 2, "4.24"},
+		{"4.2312486", 0, "5"},
+		{"4.2312486", -1, "10"},
+		{"4.2312486", -2, "100"},
+
+		{"-4231", 1, "-4231"},
+		{"-4231", 0, "-4231"},
+		{"-4231", -1, "-4230"},
+		{"-4231", -2, "-4200"},
+	}
+	for i, test := range tests {
+		d, _ := NewFromString(test.d)
+		haveRounded := d.RoundUp(test.places)
+		result, _ := NewFromString(test.result)
+
+		if !haveRounded.Equal(result) {
+			t.Errorf("Index %d: Round up for %q places %d want %q, have %q", i, test.d, test.places, test.result, haveRounded)
+		}
+	}
+
+	var d Decimal
+	d = d.RoundUp(2)
+	if !d.Equal(New(0, 0)) {
+		t.Error("Expecting rounding of 0 to 2 decimal places be 0, but " + d.String() + " found instead")
+	}
+}

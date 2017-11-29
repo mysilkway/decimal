@@ -570,6 +570,33 @@ func (d Decimal) StringFixedCash(interval uint8) string {
 	return rounded.string(false)
 }
 
+// Round up to the nearest places decimal places
+//
+// Examples:
+//
+// decimal.New(4.2312486).RoundUp(2).String() // output: "4.24"
+// decimal.New(4.2312486).RoundUp(0).String() // output: "5"
+// decimal.New(4.2312486).RoundUp(-1).String() // output: "10"
+// decimal.New(4.2312486).RoundUp(-2).String() // output: "100"
+// decimal.New(-4231).RoundUp(0).String() // output: "-4231"
+// decimal.New(-4231).RoundUp(-1).String() // output: "-4230"
+// decimal.New(-4231).RoundUp(-2).String() // output: "-4200"
+//
+func (d Decimal) RoundUp(places int32) Decimal {
+	d.ensureInitialized()
+
+	if d.exp == -places { // already rounded, return directly
+		return d
+	}
+
+	_, m := new(big.Int).DivMod(d.value, tenInt, new(big.Int))
+	ret := d.rescale(-places)
+	if ret.value.Sign() >= 0 && m.Cmp(zeroInt) != 0 {
+		ret.value.Add(ret.value, oneInt)
+	}
+	return ret
+}
+
 // Round rounds the decimal to places decimal places.
 // If places < 0, it will round the integer part to the nearest 10^(-places).
 //
