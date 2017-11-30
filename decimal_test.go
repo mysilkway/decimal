@@ -2129,6 +2129,11 @@ func TestDecimal_RoundUp(t *testing.T) {
 		{"-4231", 0, "-4231"},
 		{"-4231", -1, "-4230"},
 		{"-4231", -2, "-4200"},
+
+		{"135.125", 2, "135.13"},
+		{"1.126", 2, "1.13"},
+		{"1.120", 2, "1.12"},
+		{"1.121", 2, "1.13"},
 	}
 	for i, test := range tests {
 		d, _ := NewFromString(test.d)
@@ -2144,5 +2149,11 @@ func TestDecimal_RoundUp(t *testing.T) {
 	d = d.RoundUp(2)
 	if !d.Equal(New(0, 0)) {
 		t.Error("Expecting rounding of 0 to 2 decimal places be 0, but " + d.String() + " found instead")
+	}
+
+	d = New(13512500000,-8)
+	d = d.RoundUp(2)
+	if !d.Equal(New(13513,-2)) {
+		t.Error("Expecting rounding of 135.125 to 2 decimal places be 135.13, but " + d.String() + " found instead")
 	}
 }

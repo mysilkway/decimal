@@ -585,15 +585,25 @@ func (d Decimal) StringFixedCash(interval uint8) string {
 func (d Decimal) RoundUp(places int32) Decimal {
 	d.ensureInitialized()
 
-	if d.exp == -places { // already rounded, return directly
-		return d
+	ret := d.rescale(-places)
+
+	// remainder comparison
+	r := new(big.Int)
+
+	// zero case handling
+	if ret.value.Cmp(zeroInt) == 0 {
+		if d.value.Cmp(zeroInt) != 0 {
+			r = oneInt // set to non-zero value if they are not the same
+		}
+	} else {
+		// divide by itself to see if it's without remainder
+		_, r = new(big.Int).DivMod(d.value, ret.rescale(d.exp).value, r)
 	}
 
-	_, m := new(big.Int).DivMod(d.value, tenInt, new(big.Int))
-	ret := d.rescale(-places)
-	if ret.value.Sign() >= 0 && m.Cmp(zeroInt) != 0 {
+	if ret.value.Sign() >= 0 && r.Cmp(zeroInt) != 0 {
 		ret.value.Add(ret.value, oneInt)
 	}
+
 	return ret
 }
 
